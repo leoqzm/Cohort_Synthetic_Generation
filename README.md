@@ -222,4 +222,42 @@ SEQ_LENGTH = 1024
 TENSOR_MP_SIZE = 2
 PIPELINE_MP_SIZE = 2
 ```
-   
+Also can resume from checkpoint by using 
+
+==model.resume_from_checkpoint\={PATH_TO_YOUR_CHECKPOINT_FILE}==
+
+```
+python megatron_gpt_pretraining.py \
+        trainer.devices={NUM_GPUS} \
+        trainer.accelerator=gpu \
+        trainer.log_every_n_steps=100 \
+        trainer.val_check_interval=500 \
+        trainer.accumulate_grad_batches=1 \
+        trainer.max_steps=10000 \
+        trainer.precision=16 \
+        trainer.gradient_clip_val=1.0 \
+        exp_manager.exp_dir=gpt_creditcard_results \
+        model.tensor_model_parallel_size={TENSOR_MP_SIZE} \
+        model.pipeline_model_parallel_size={PIPELINE_MP_SIZE} \
+        model.optim.name=fused_adam \
+        model.optim.lr=2e-4 \
+        model.optim.sched.warmup_steps=2 \
+        model.optim.sched.constant_steps=2 \
+        model.optim.sched.min_lr=8e-5 \
+        model.max_position_embeddings={SEQ_LENGTH} \
+        model.encoder_seq_length={SEQ_LENGTH} \
+        model.data.seq_length={SEQ_LENGTH} \
+        model.tokenizer.type=Tabular \
+        model.tokenizer.library=tabular \
+        model.tokenizer.vocab_file={CC_OUTPUT_P} \
+        model.tokenizer.delimiter=\',\' \
+        model.data.eod_mask_loss=True \
+        model.data.splits_string=\'3800,198,2\' \
+        model.num_layers={NUM_LAYERS} \
+        model.hidden_size={HIDDEN_SIZE} \
+        model.num_attention_heads={NUM_ATTENTION_HEADS} \
+        model.activations_checkpoint_method=\'block\' \
+        model.activations_checkpoint_num_layers=1 \
+        model.data.data_prefix=[tabular_data_text_document]
+        model.resume_from_checkpoint={PATH_TO_YOUR_CHECKPOINT_FILE}
+```
