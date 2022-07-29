@@ -1,7 +1,7 @@
 # Cohort_Synthetic_Generation
 ## Requirements
-Python 3.8 or above
-Pytorch 1.10.0 or above
+Python 3.8 or above \
+Pytorch 1.10.0 or above \
 NVIDIA GPU for training
 
 ## Environment
