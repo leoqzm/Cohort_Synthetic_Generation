@@ -186,7 +186,7 @@ python megatron_gpt_pretraining.py \
         trainer.max_steps=10000 \
         trainer.precision=16 \
         trainer.gradient_clip_val=1.0 \
-        exp_manager.exp_dir=gpt_creditcard_results \
+        exp_manager.exp_dir=Cohort_Latest_results \
         model.tensor_model_parallel_size={TENSOR_MP_SIZE} \
         model.pipeline_model_parallel_size={PIPELINE_MP_SIZE} \
         model.optim.name=fused_adam \
@@ -228,36 +228,62 @@ Also can resume from checkpoint by using
 
 ```
 python megatron_gpt_pretraining.py \
-        trainer.devices={NUM_GPUS} \
+        trainer.devices=4 \
         trainer.accelerator=gpu \
         trainer.log_every_n_steps=100 \
         trainer.val_check_interval=500 \
         trainer.accumulate_grad_batches=1 \
-        trainer.max_steps=10000 \
+        trainer.max_steps=200000 \
         trainer.precision=16 \
         trainer.gradient_clip_val=1.0 \
         exp_manager.exp_dir=gpt_creditcard_results \
-        model.tensor_model_parallel_size={TENSOR_MP_SIZE} \
-        model.pipeline_model_parallel_size={PIPELINE_MP_SIZE} \
+        model.tensor_model_parallel_size=2 \
+        model.pipeline_model_parallel_size=2 \
         model.optim.name=fused_adam \
         model.optim.lr=2e-4 \
         model.optim.sched.warmup_steps=2 \
         model.optim.sched.constant_steps=2 \
         model.optim.sched.min_lr=8e-5 \
-        model.max_position_embeddings={SEQ_LENGTH} \
-        model.encoder_seq_length={SEQ_LENGTH} \
-        model.data.seq_length={SEQ_LENGTH} \
+        model.max_position_embeddings=1024 \
+        model.encoder_seq_length=1024 \
+        model.data.seq_length=1024 \
         model.tokenizer.type=Tabular \
         model.tokenizer.library=tabular \
-        model.tokenizer.vocab_file={CC_OUTPUT_P} \
+        model.tokenizer.vocab_file=Cohort_data/HT_Pros_coder.pickle \
         model.tokenizer.delimiter=\',\' \
         model.data.eod_mask_loss=True \
         model.data.splits_string=\'3800,198,2\' \
-        model.num_layers={NUM_LAYERS} \
-        model.hidden_size={HIDDEN_SIZE} \
-        model.num_attention_heads={NUM_ATTENTION_HEADS} \
+        model.num_layers=4 \
+        model.hidden_size=1024 \
+        model.num_attention_heads=8 \
         model.activations_checkpoint_method=\'block\' \
         model.activations_checkpoint_num_layers=1 \
-        model.data.data_prefix=[tabular_data_text_document]
+        model.data.data_prefix=[Cohort_last_tabular_data]
         model.resume_from_checkpoint={PATH_TO_YOUR_CHECKPOINT_FILE}
+```
+## 6.Convert checkpoint to nemo file
+To convert ckpt file, and use different settings for different Number of GPUS you use
+For 4 GPUS:
+```
+python -m torch.distributed.launch --nproc_per_node=4 megatron_ckpt_to_nemo.py \
+    --checkpoint_folder=gpt_cohort_results/megatron_gpt/checkpoints \
+    --checkpoint_name='megatron_gpt--val_loss=0.09-step=226500-consumed_samples=1812000.0.ckpt' \
+    --nemo_file_path=Cohort_tabular.nemo \
+    --tensor_model_parallel_size=2 \
+    --pipeline_model_parallel_size=2 \
+    --gpus_per_node=4 \
+    --model_type=gpt
+```
+
+## 7.Generate synthetic credit card transactions
+
+```
+python megatron_gpt_eval.py \
+    gpt_model_file=Cohort_tabular.nemo \
+    trainer.devices=4 \
+    trainer.num_nodes=1 \
+    tensor_model_parallel_size=2 \
+    pipeline_model_parallel_size=2 \
+    prompts=[\'\',\'\'] \
+    server=True
 ```
