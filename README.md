@@ -212,7 +212,7 @@ python megatron_gpt_pretraining.py \
         
 ```
 If this block does not work in notebook, run it in terminal and change the
-Hyperparameters into proper GPU setting, and the path link to the datafolder
+Hyperparameters into proper GPU setting, and the path link to the datafolder.(TENSOR_MP_SIZE x PIPLINE_MP_SIZE = NUM_GPUS)
 ```
 NUM_LAYERS = 4
 NUM_GPUS = 4
@@ -222,6 +222,7 @@ SEQ_LENGTH = 1024
 TENSOR_MP_SIZE = 2
 PIPELINE_MP_SIZE = 2
 ```
+
 Also can resume from checkpoint by using 
 
 ==model.resume_from_checkpoint\={PATH_TO_YOUR_CHECKPOINT_FILE}==
@@ -276,14 +277,15 @@ python -m torch.distributed.launch --nproc_per_node=4 megatron_ckpt_to_nemo.py \
 ```
 
 ## 7.Generate synthetic credit card transactions
-
+Run this block in another terminal to create a server, and remember to change gpt and parallel_sizes for different number of GPUs
 ```
 python megatron_gpt_eval.py \
     gpt_model_file=Cohort_tabular.nemo \
-    trainer.devices=4 \
+    trainer.devices={GPU_NUM} \
     trainer.num_nodes=1 \
-    tensor_model_parallel_size=2 \
-    pipeline_model_parallel_size=2 \
+    tensor_model_parallel_size={2 for 4GPU, 1 for 1GPU} \
+    pipeline_model_parallel_size={2 for 4GPU, 1 for 1GPU} \
     prompts=[\'\',\'\'] \
     server=True
 ```
+After run this code block, run the 7.Generate synthetic credit card transactions in the notebook
