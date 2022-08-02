@@ -289,3 +289,62 @@ python megatron_gpt_eval.py \
     server=True
 ```
 After run this code block, run the 7.Generate synthetic credit card transactions in the notebook
+
+## 8.Evaluation
+To generate more sythetic rows and make them into a file, please run the following code block:
+```
+with open('Cohort_data/HT_Pros_coder.pickle', 'rb') as handle:
+        cc: ColumnCodes = pickle.load(handle)
+
+        
+        
+OUTPUT_FILE_NAME = 'synthetic_csv.csv'
+NUM_OF_ROWS = 1000
+
+token_per_rows = sum(cc.sizes) + 1
+#token_per_rows = 545
+batch_size = 1
+port_num = 5555
+num_of_rows = 1
+headers = {"Content-Type": "application/json"}
+
+
+def request_data(data):
+    
+    resp = requests.put('http://localhost:{}/generate'.format(port_num),
+                        data=json.dumps(data), headers=headers)
+    
+    sentences = resp.json()['sentences']
+    return sentences
+
+
+# generate the initial transactions 
+data = {
+    "sentences": [""] * batch_size,
+    "tokens_to_generate": num_of_rows * token_per_rows,
+    "temperature": 1.0,
+    "add_BOS": True
+}
+df_out = pd.DataFrame(columns=columns.tolist())
+for _ in range(NUM_OF_ROWS):
+    sentences = request_data(data)
+    for i in range(batch_size):
+        if sentences[i][:13] == '<|endoftext|>':
+                sentences[i] = sentences[i][13:]
+        s = sentences[i][:-2].split(',')
+        # print(s)
+        df_out.loc[len(df_out.index)] = s
+df_out.to_csv(OUTPUT_FILE_NAME)
+df_out.head()
+```
+and use these functions to evaluate the model, which check the coarse grain level evaluation(Duplication of synthetic data)
+```
+total = pd.concat([df, df_out])
+copies = len(total) - len(total.drop_duplicates()) - (len(df) - len(df.drop_duplicates())) - (len(df_out) - len(df_out.drop_duplicates()))
+print(copies)
+```
+
+```
+100*(len(df_out) - len(df_out.drop_duplicates()))/len(df_out)
+```
+
