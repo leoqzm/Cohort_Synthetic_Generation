@@ -41,6 +41,10 @@ Show nemo env in notebook kernal:
 conda install ipykernel
 ipython kernel install --user --name=nemo
 ```
+# Need to Mount the HT_Pros tabular data into the Cohort_Data folder First
+```
+#TODO Dataset link
+```
 # Run Cohort_Synthetic_Data_Generation_Megatron.ipynb
 ## 1.Data Cleaning and Formatting
 Need to follow the 1.Data Cleaning and Formatting part in the notebook
